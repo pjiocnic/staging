@@ -1,0 +1,85 @@
+git remote add origin https://github.com//staging.git
+git push origin -u origin master
+
+1. Liveness probe
+- File:
+apiVersion: v1
+kind: pod
+metadata:
+  name: kubia-liveness
+spec:
+  containers:
+  - image: luksa/kubia-unhealthy       
+    name: kubia
+    livenessProbe:                     
+      httpGet:                         
+        path: /                        
+        port: 8080                     
+
+- create the pod
+kubectl create -f kubia-liveness-probe.yaml
+
+- check on the pods
+kubectl get po kubia-liveness
+
+- check on the logs
+// log to print prev container's logs
+kubectl logs mypod --previous
+
+- trouble shoot
+kubectl describe po kubia-liveness
+
+2. Liveness probe with a delay
+kubia-liveness-probe-initial-delay.yaml
+
+apiVersion: v1
+kind: pod
+metadata:
+   name: kubia-liveness
+spec:
+   containers:
+   - image: luksa/kubia-unhealthy       
+     name: kubia
+     livenessProbe:
+        httpGet:
+           path: /
+           port: 8080
+        initialDelaySeconds: 15            
+
+3. Best practices
+- limit the probe time to less than 1 sec else it will eat  container CPU time
+
+4. Kubelet restarts the failed container
+5. ReplicationController manages the node failure. Pods that are created manually ie unmanaged pods (and not thru replication controller) are not restarted
+
+## ReplicationController
+
+apiVersion: v1
+kind: ReplicationController        1
+metadata:
+  name: kubia                      2
+spec:
+  replicas: 3                      3
+  selector:                        4
+    app: kubia                     4
+  template:                        5
+    metadata:                      5
+      labels:                      5
+        app: kubia                 5
+    spec:                          5
+      containers:                  5
+      - name: kubia                5
+        image: luksa/kubia         5
+        ports:                     5
+        - containerPort: 8080      5
+
+        
+kubectl create -f kubia-rc.yaml
+kubectl describe rc kubia
+
+
+- Simulate a node crash
+gcloud compute ssh 
+sudo ifconfig eth0 down
+Bring node back up
+gcloud compute instances reset gke-kubia-default-pool-b46381f1-zwko // get the node name from kubectl get nodes

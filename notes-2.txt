@@ -1,0 +1,90 @@
+1. kubia-manual-with-labels.yaml (pod with 2 labels)
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kubia-manual-v2
+  labels:
+    creation_method: manual          1
+    env: prod                        1
+spec:
+  containers:
+  - image: luksa/kubia
+    name: kubia
+    ports:
+    - containerPort: 8080
+      protocol: TCP
+
+2. kubectl create -f kubia-manual-with-labels.yaml
+
+3. List all labels:
+   kubectl get po --show-labels
+
+4. List specific labels
+kubectl get po -L creation_method,env
+
+5. Adding a labels
+kubectl label po kubia-manual creation_method=manual
+kubectl label po kubia-manual-v2 env=debug --overwrite
+
+
+6. Listing pods using a label selector
+
+#list all pods that have label creation_method=manual
+kubectl get po -l creation_method=manual
+#list all pods that have label env
+kubectl get po -l env
+#list all pods that have dont have label env
+# Make sure to use single quotes around !env, so the bash shell doesn’t evaluate the exclamation mark.
+kubectl get po -l '!env'
+# Other variations
+creation_method!=manual 
+env in (prod,devel) 
+env notin (prod,devel) 
+multiple comma-separated criteria: app=pc,rel=beta 
+
+7. Labeling the nodes
+kubectl label node gke-kubia-85f6-node-0rrx gpu=true
+
+8. Listing nodes using label selector
+kubectl get nodes -l gpu=true
+kubectl get nodes -L gpu
+
+## Scheduling pods to specific nodes
+
+1. kubia-gpu.yaml:
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kubia-gpu
+spec:
+  nodeSelector:               1
+    gpu: "true"               1
+  containers:
+  - image: luksa/kubia
+    name: kubia
+	
+2. kubectl create -f kubia-gpu.yaml 
+
+## Describing a pod
+kubectl get po kubia-zxzij -o yaml
+
+## namespaces
+1. List namespaces
+kubectl get ns
+2. Listing pods under kube-system namespaces
+kubectl get po --namespace kube-system
+3. Creating a pod in a custom namespace
+kubectl create -f kubia-manual.yaml -n custom-namespace
+4. Switching between namespaces
+alias kcd='kubectl config set-context $(kubectl config current-context) 
+kcd some-namespace
+
+## cleanup
+kubectl delete po kubia-gpu
+kubectl delete po pod1 pod2
+
+kubectl delete po -l creation_method=manual
+kubectl delete po -l rel=canary
+kubectl delete ns custom-namespace
+kubectl delete po --all
+kubectl delete all --all  //deleting all resources (rc, pods and services)
