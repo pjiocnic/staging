@@ -1,0 +1,102 @@
+kubectl edit rc kubia
+export KUBE_EDITOR="/usr/bin/nano"
+
+Scaling manually
+kubectl scale rc kubia --replicas=10
+
+Deleting RC without deleting the pods
+kubectl delete rc kubia --cascade=false
+
+Replica Sets vs Replication Controller
+Replica Sets can match on multiple labels env=production and env=devel and treat them as a single group
+Replica Sets can match pods just by label regardless of value (like env=*)
+
+---
+
+## DaemonSet
+
+Example: DaemonSet (ssd-monitor-daemonset.yaml)
+apiVersion: apps/v1beta2            
+kind: ReplicaSet                    
+metadata:
+  name: kubia
+spec:
+  replicas: 3
+  selector:
+    matchLabels:                    
+      app: kubia                    
+  template:                         
+    metadata:                       
+      labels:                       
+        app: kubia                  
+    spec:                           
+      containers:                   
+      - name: kubia                 
+        image: luksa/kubia          
+
+        
+kubectl create -f ssd-monitor-daemonset.yaml
+kubectl get ds
+kubectl get po
+You need to Label the nodes for the daemonSet to be deployed to those nodes
+kubectl label node minikube disk=ssd
+kubectl label node minikube disk=hdd --overwrite
+
+
+## Job
+1. exporter.yaml
+
+apiVersion: batch/v1                  1
+kind: Job                             1
+metadata:
+  name: batch-job
+spec:                                 2
+  template:
+    metadata:
+      labels:                         2
+        app: batch-job                2
+    spec:
+      restartPolicy: OnFailure        3
+      containers:
+      - name: main
+        image: luksa/batch-job
+
+kubectl get jobs
+kubectl get po
+kubectl get po -a
+kubectl logs batch-job-28qf4
+
+## Running multiple pod instances in a Job
+
+1. multi-completion-batch-job.yaml
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: multi-completion-batch-job
+spec:
+  completions: 5                                1
+  template:
+
+2. kubectl scale job multi-completion-batch-job --replicas 3
+
+## CronJobs
+
+apiVersion: batch/v1beta1                  1
+kind: CronJob
+metadata:
+  name: batch-job-every-fifteen-minutes
+spec:
+  schedule: "0,15,30,45 * * * *"           2
+  jobTemplate:
+    spec:
+      template:                            3
+        metadata:                          3
+          labels:                          3
+            app: periodic-batch-job        3
+        spec:                              3
+          restartPolicy: OnFailure         3
+          containers:                      3
+          - name: main                     3
+            image: luksa/batch-job         3
+
