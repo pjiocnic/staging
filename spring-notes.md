@@ -1,7 +1,7 @@
 https://medium.com/@caio.psw/deploying-and-scalling-your-springboot-application-in-a-kubernetes-cluster-part1-77ad8c6c8d82
 
 Step 1: k8s-deploy.yml
-
+```
 apiVersion: apps/v1beta2
 kind: Deployment
 metadata:
@@ -31,8 +31,10 @@ spec:
 kubectl apply -f k8s-deploy.yml
 
 kubectl get pods
+```
 
 Step 2: k8s-svc.yml
+```
 apiVersion: v1
 kind: Service
 metadata:
@@ -51,11 +53,12 @@ spec:
 kubectl apply -f k8s-svc.yml
 
 http://localhost:30001
+```
 
 ---
 
 Step 3: svc-k8s-gke.yml
-
+```
 apiVersion: v1
 kind: Service
 metadata:
@@ -67,7 +70,7 @@ spec:
      targetPort: 8080
    selector:
       app: k8s-spring-sample
-      
+```     
 git clone https://github.com/caio-ps/k8s-spring-sample.git
       
 
