@@ -70,6 +70,9 @@ spec:
      targetPort: 8080
    selector:
       app: k8s-spring-sample
+
+kubectl apply -f svc-k8s-gke.yml
+
 ```     
 git clone https://github.com/caio-ps/k8s-spring-sample.git
       
